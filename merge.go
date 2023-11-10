@@ -2,17 +2,18 @@ package tiledinference
 
 import flatbush "github.com/bmharper/flatbush-go"
 
-// Rect is an object detection rectangle
-type Rect struct {
+// Box is an object detection rectangle
+type Box struct {
 	X1    int32
 	Y1    int32
 	X2    int32
 	Y2    int32
+	Tile  int32 // Tile in which this box was detected
 	Class int32 // Detection class
 }
 
 // Intersection over Union
-func (r Rect) IoU(b Rect) float64 {
+func (r Box) IoU(b Box) float64 {
 	// Compute intersection
 	x1 := max(r.X1, b.X1)
 	y1 := max(r.Y1, b.Y1)
@@ -28,21 +29,21 @@ func (r Rect) IoU(b Rect) float64 {
 	return intersection / union
 }
 
-func (r Rect) Width() float64 {
+func (r Box) Width() float64 {
 	return float64(r.X2 - r.X1)
 }
 
-func (r Rect) Height() float64 {
+func (r Box) Height() float64 {
 	return float64(r.Y2 - r.Y1)
 }
 
-func (r Rect) Area() float64 {
+func (r Box) Area() float64 {
 	return float64(r.Width()) * float64(r.Height())
 }
 
 // Object is something that can be represented as a rectangle
 type Object interface {
-	Rect() Rect
+	TiledInferenceBox() Box
 }
 
 // Options for merging objects
@@ -63,9 +64,9 @@ func DefaultMergeOptions() MergeOptions {
 // options may be nil, in which case DefaultMergeOptions() is used.
 // See MergeBoxes for a description of the return format.
 func MergeObjects(objects []Object, options *MergeOptions) [][]int {
-	boxes := make([]Rect, len(objects))
+	boxes := make([]Box, len(objects))
 	for i, obj := range objects {
-		boxes[i] = obj.Rect()
+		boxes[i] = obj.TiledInferenceBox()
 	}
 	return MergeBoxes(boxes, options)
 }
@@ -76,7 +77,7 @@ func MergeObjects(objects []Object, options *MergeOptions) [][]int {
 // inside it. Groups with more than one object inside mean those objects must be
 // merged together.
 // The integers inside the groups refers to the index of the object in the original query.
-func MergeBoxes(boxes []Rect, options *MergeOptions) [][]int {
+func MergeBoxes(boxes []Box, options *MergeOptions) [][]int {
 	defaultOptions := DefaultMergeOptions()
 	if options == nil {
 		options = &defaultOptions
@@ -95,6 +96,7 @@ func MergeBoxes(boxes []Rect, options *MergeOptions) [][]int {
 	flatMerge := []int{}
 	groupStart := []int{}
 	nearby := []int{}
+	tilesInThisGroup := []int{}
 	for i, r := range boxes {
 		if consumed[i] {
 			continue
@@ -102,14 +104,21 @@ func MergeBoxes(boxes []Rect, options *MergeOptions) [][]int {
 		nearby = fb.SearchFast(float64(r.X1), float64(r.Y1), float64(r.X2), float64(r.Y2), nearby)
 		groupStart = append(groupStart, len(flatMerge))
 		flatMerge = append(flatMerge, i)
+		tilesInThisGroup = tilesInThisGroup[:0]
 		for _, j := range nearby {
-			if i != j && !consumed[j] && (options.MergeDifferentClasses || boxes[i].Class == boxes[j].Class) {
-				if r.IoU(boxes[j]) >= options.MinIoU {
-					flatMerge = append(flatMerge, j)
-					consumed[j] = true
-				}
+			if i != j &&
+				!consumed[j] &&
+				boxes[i].Tile != boxes[j].Tile &&
+				(options.MergeDifferentClasses || boxes[i].Class == boxes[j].Class) &&
+				r.IoU(boxes[j]) >= options.MinIoU &&
+				indexOf(tilesInThisGroup, int(boxes[j].Tile)) == -1 {
+				// Merge j into this cluster
+				flatMerge = append(flatMerge, j)
+				consumed[j] = true
+				tilesInThisGroup = append(tilesInThisGroup, int(boxes[j].Tile))
 			}
 		}
+		consumed[i] = true
 	}
 	// Add terminator
 	groupStart = append(groupStart, len(flatMerge))
@@ -121,4 +130,13 @@ func MergeBoxes(boxes []Rect, options *MergeOptions) [][]int {
 		merge[i] = flatMerge[groupStart[i]:groupStart[i+1]]
 	}
 	return merge
+}
+
+func indexOf(haystack []int, needle int) int {
+	for i, v := range haystack {
+		if v == needle {
+			return i
+		}
+	}
+	return -1
 }
