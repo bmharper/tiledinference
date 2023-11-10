@@ -15,19 +15,30 @@ func main() {
 	net := loadNeuralNetwork()
 	img := loadImage()
 
-	// Create a TiledInference object
+	// Tiles will overlap by at least this number of pixels
 	minOverlap := 32
+
+	// Create a 'tiling', which is just 8 numbers that define how our image is divided
 	ti := tiledinference.MakeTiling(net, img.Width, img.Height, nn.Width, nn.Height, minOverlap)
 
+	// Run NN inference on each tile
 	unmerged := []tiledinference.Box{}
 
 	for ty := 0; ty < ti.NumY; ty++ {
 		for tx := 0; tx < ti.NumX; tx++ {
-			txo, tyo := ti.TilePosition(tx, ty)
-			crop := img.Crop(txo, tyo, txo + nn.Width, tyo + nn.Width)
+			// extract a crop out of the image
+			x1, y1, x2, y2 := ti.TileBox(tx, ty)
+			crop := img.Crop(x1, y1, x2, y2)
+
+			// run object detection
 			boxes := net.DetectObjects(crop)
 			for _, b := range boxes {
-				b.Tile = int32(ty * ti.NumX + tx)
+				// In your actual code you would be translating here between your internal
+				// 'detection' format and the tiledinference.Box struct.
+				// In this example, we pretend that nn.DetectObjects() returns tiledinference.Box structs.
+				b.Tile = ti.MakeTileIndex(tx, ty)
+				// Move the box coordinates into the original image reference frame
+				b.Offset(x1, y1)
 				unmerged = append(unmerged, b)
 			}
 		}
@@ -37,9 +48,10 @@ func main() {
 
 	// Here we could run some special merging logic, but in this simple
 	// example we just take the first box in each group and discard the rest.
-	final := []tiledinference.Box{}
+	output := []tiledinference.Box{}
 	for _, g := range groups {
-		final = append(final, unmerged[g[0]])
+		first := unmerged[g[0]]
+		output = append(output, first)
 	}
 }
 ```

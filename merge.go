@@ -8,7 +8,7 @@ type Box struct {
 	Y1    int32
 	X2    int32
 	Y2    int32
-	Tile  int32 // Tile in which this box was detected
+	Tile  int   // Tile in which this box was detected
 	Class int32 // Detection class
 }
 
@@ -39,6 +39,14 @@ func (r Box) Height() float64 {
 
 func (r Box) Area() float64 {
 	return float64(r.Width()) * float64(r.Height())
+}
+
+// Move the tile by dx, dy
+func (r *Box) Offset(dx, dy int32) {
+	r.X1 = r.X1 + dx
+	r.Y1 = r.Y1 + dy
+	r.X2 = r.X2 + dx
+	r.Y2 = r.Y2 + dy
 }
 
 // Object is something that can be represented as a rectangle

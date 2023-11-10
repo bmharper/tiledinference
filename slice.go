@@ -58,10 +58,14 @@ between different tiles.
 
 // Tiling defines how an image has been split into tiles
 type Tiling struct {
-	SpaceX float64 // Horizontal pixels between each tile
-	SpaceY float64 // Vertical pixels between each tile
-	NumX   int     // Number of tiles horizontally
-	NumY   int     // Number of tiles vertically
+	SpaceX      float64 // Horizontal pixels between each tile
+	SpaceY      float64 // Vertical pixels between each tile
+	NumX        int     // Number of tiles horizontally
+	NumY        int     // Number of tiles vertically
+	NNWidth     int     // Width of neural network
+	NNHeight    int     // Height of neural network
+	ImageWidth  int     // Width of original image
+	ImageHeight int     // Height of original image
 }
 
 // Split an image up into tiles
@@ -77,8 +81,26 @@ func MakeTiling(imageWidth, imageHeight int, nnWidth, nnHeight int, minPadding i
 }
 
 // Return the X,Y coordinates of the origin of the given tile
-func (t Tiling) TilePosition(x, y int) (int, int) {
+func (t Tiling) TileOrigin(x, y int) (int, int) {
 	return OriginAt(x, t.SpaceX), OriginAt(y, t.SpaceY)
+}
+
+// Return the X1,Y1,X2,Y2 coordinates of the given tile
+func (t Tiling) TileBox(x, y int) (int, int, int, int) {
+	x1, y1 := t.TileOrigin(x, y)
+	x2 := min(x1+t.NNWidth, t.ImageWidth)
+	y2 := min(y1+t.NNHeight, t.ImageHeight)
+	return x1, y1, x2, y2
+}
+
+// Return a single number that uniquely identifies this tile
+func (t Tiling) MakeTileIndex(tx, ty int) int {
+	return ty*t.NumX + tx
+}
+
+// Split a tile index created by MakeTileIndex into the original tx and ty that created it
+func (t Tiling) SplitTileIndex(index int) (int, int) {
+	return index % t.NumX, index / t.NumX
 }
 
 // Return the X or Y position of the origin of a tile
