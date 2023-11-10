@@ -12,6 +12,18 @@ type Box struct {
 	Class int32 // Detection class
 }
 
+// MakeBox returns a Box
+func MakeBox(x1, y1, x2, y2 int32, tile int, class int32) Box {
+	return Box{
+		X1:    x1,
+		Y1:    y1,
+		X2:    x2,
+		Y2:    y2,
+		Tile:  tile,
+		Class: class,
+	}
+}
+
 // Intersection over Union
 func (r Box) IoU(b Box) float64 {
 	// Compute intersection
