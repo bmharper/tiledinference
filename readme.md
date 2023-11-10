@@ -6,6 +6,10 @@ that is larger than your neural network. The package provides two mechanisms:
 1. Slicing a large image up into evenly spaced tiles, with a guaranteed minimum overlap.
 2. Merging object detections from the individual tiles back into a single set of detections.
 
+The tile splitter recognizes if your image is smaller than your neural network, and in
+this case, it returns just a single tile. This means you can use the same code for
+images of any size.
+
 Example:
 
 ```go
@@ -44,14 +48,23 @@ func main() {
 		}
 	}
 
-	groups := tiledinference.MergeBoxes(unmerged, nil)
+	var output []tiledinference.Box{}
 
-	// Here we could run some special merging logic, but in this simple
-	// example we just take the first box in each group and discard the rest.
-	output := []tiledinference.Box{}
-	for _, g := range groups {
-		first := unmerged[g[0]]
-		output = append(output, first)
+	if ti.IsSingle() {
+		// If our image is smaller than our NN in both dimensions, then we don't need to
+		// merge, so we can consume our output directly.
+		output = unmerged
+	} else {
+		// Run the merge logic
+		groups := tiledinference.MergeBoxes(unmerged, nil)
+
+		// Here we could run some special merging logic, but in this simple
+		// example we just take the first box in each group and discard the rest.
+		output = []tiledinference.Box{}
+		for _, g := range groups {
+			first := unmerged[g[0]]
+			output = append(output, first)
+		}
 	}
 }
 ```

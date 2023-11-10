@@ -80,6 +80,11 @@ func MakeTiling(imageWidth, imageHeight int, nnWidth, nnHeight int, minPadding i
 	}
 }
 
+// Returns true if the tiling consists of just a single tile
+func (t Tiling) IsSingle() bool {
+	return t.NumX == 1 && t.NumY == 1
+}
+
 // Return the X,Y coordinates of the origin of the given tile
 func (t Tiling) TileOrigin(x, y int) (int, int) {
 	return OriginAt(x, t.SpaceX), OriginAt(y, t.SpaceY)
