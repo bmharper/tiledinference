@@ -73,10 +73,14 @@ func MakeTiling(imageWidth, imageHeight int, nnWidth, nnHeight int, minPadding i
 	sx, nx := ComputeTileSpacingAndCount(imageWidth, nnWidth, minPadding)
 	sy, ny := ComputeTileSpacingAndCount(imageHeight, nnHeight, minPadding)
 	return Tiling{
-		SpaceX: sx,
-		NumX:   nx,
-		SpaceY: sy,
-		NumY:   ny,
+		SpaceX:      sx,
+		NumX:        nx,
+		SpaceY:      sy,
+		NumY:        ny,
+		NNWidth:     nnWidth,
+		NNHeight:    nnHeight,
+		ImageWidth:  imageWidth,
+		ImageHeight: imageHeight,
 	}
 }
 
