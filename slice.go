@@ -94,12 +94,18 @@ func (t Tiling) TileOrigin(x, y int) (int, int) {
 	return OriginAt(x, t.SpaceX), OriginAt(y, t.SpaceY)
 }
 
-// Return the X1,Y1,X2,Y2 coordinates of the given tile
-func (t Tiling) TileBox(x, y int) (int, int, int, int) {
+// Return the X1,Y1,X2,Y2 coordinates of the given tile.
+// This is the window that the NN receives
+func (t Tiling) TileRect(x, y int) Rect {
 	x1, y1 := t.TileOrigin(x, y)
 	x2 := min(x1+t.NNWidth, t.ImageWidth)
 	y2 := min(y1+t.NNHeight, t.ImageHeight)
-	return x1, y1, x2, y2
+	return Rect{
+		X1: int32(x1),
+		Y1: int32(y1),
+		X2: int32(x2),
+		Y2: int32(y2),
+	}
 }
 
 // Return a single number that uniquely identifies this tile

@@ -60,15 +60,15 @@ func TestTilePositions(t *testing.T) {
 
 }
 
-func boxToString(x1, y1, x2, y2 int) string {
-	return fmt.Sprintf("%v,%v,%v,%v", x1, y1, x2, y2)
+func rectToString(r Rect) string {
+	return fmt.Sprintf("%v,%v,%v,%v", r.X1, r.Y1, r.X2, r.Y2)
 }
 
 func TestMisc(t *testing.T) {
 	ti := MakeTiling(2688, 1560, 640, 480, 32)
 	require.Equal(t, 5, ti.NumX)
 	require.Equal(t, 4, ti.NumY)
-	require.Equal(t, "0,0,640,480", boxToString(ti.TileBox(0, 0)))
-	require.Equal(t, "512,0,1152,480", boxToString(ti.TileBox(1, 0)))
-	require.Equal(t, "2048,1080,2688,1560", boxToString(ti.TileBox(4, 3)))
+	require.Equal(t, "0,0,640,480", rectToString(ti.TileRect(0, 0)))
+	require.Equal(t, "512,0,1152,480", rectToString(ti.TileRect(1, 0)))
+	require.Equal(t, "2048,1080,2688,1560", rectToString(ti.TileRect(4, 3)))
 }
