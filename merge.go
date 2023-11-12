@@ -38,16 +38,16 @@ func (r *Rect) IoU(b Rect) float64 {
 	return intersection / union
 }
 
-func (r *Rect) Width() float64 {
-	return float64(r.X2 - r.X1)
+func (r *Rect) Width() int {
+	return int(r.X2 - r.X1)
 }
 
-func (r *Rect) Height() float64 {
-	return float64(r.Y2 - r.Y1)
+func (r *Rect) Height() int {
+	return int(r.Y2 - r.Y1)
 }
 
-func (r *Rect) Area() float64 {
-	return float64(r.Width()) * float64(r.Height())
+func (r *Rect) Area() int {
+	return r.Width() * r.Height()
 }
 
 // Move the tile by dx, dy
