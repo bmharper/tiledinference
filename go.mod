@@ -1,10 +1,10 @@
 module github.com/bmharper/tiledinference
 
-go 1.21.1
+go 1.22
 
 require (
-	github.com/bmharper/flatbush-go v1.0.0
-	github.com/stretchr/testify v1.8.4
+	github.com/bmharper/flatbush-go v1.1.0
+	github.com/stretchr/testify v1.9.0
 )
 
 require (

@@ -139,10 +139,10 @@ func MergeBoxes(tiling Tiling, boxes []Box, options *MergeOptions) (groups [][]i
 	}
 
 	// Create spatial index so that finding boxes in similar locations is fast
-	fb := flatbush.NewFlatbush64()
+	fb := flatbush.NewFlatbush[int32]()
 	fb.Reserve(len(boxes))
 	for _, b := range boxes {
-		fb.Add(float64(b.Rect.X1), float64(b.Rect.Y1), float64(b.Rect.X2), float64(b.Rect.Y2))
+		fb.Add(b.Rect.X1, b.Rect.Y1, b.Rect.X2, b.Rect.Y2)
 	}
 	fb.Finish()
 
@@ -171,7 +171,7 @@ func MergeBoxes(tiling Tiling, boxes []Box, options *MergeOptions) (groups [][]i
 			continue
 		}
 		consumed[i] = true
-		nearby = fb.SearchFast(float64(r.Rect.X1), float64(r.Rect.Y1), float64(r.Rect.X2), float64(r.Rect.Y2), nearby)
+		nearby = fb.SearchFast(r.Rect.X1, r.Rect.Y1, r.Rect.X2, r.Rect.Y2, nearby)
 		groupStart = append(groupStart, len(flatMerge))
 		flatMerge = append(flatMerge, i)
 		tilesInThisGroup = append(tilesInThisGroup[:0], int(r.Tile))
